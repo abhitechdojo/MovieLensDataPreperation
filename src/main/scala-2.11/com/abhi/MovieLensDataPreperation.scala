@@ -28,10 +28,7 @@ object MovieLensDataPreperation {
       .toList
 
     // write to a json file as an array
-    val pw = new PrintWriter(new File("/Users/abhishek.srivastava/Downloads/ml-1m/users.json" ))
-    val x : String = userList.mkString("[", ",", "]")
-    pw.write(x)
-    pw.close()
+    val usersData  = "\"users\": {" + userList.mkString(",") + "}"
 
     // 2. read the ratings file
     val ratingList : List[Rating] = Source
@@ -47,21 +44,23 @@ object MovieLensDataPreperation {
       .map(line => Movie(line, ratingList))
       .toList
 
-    val pw3 = new PrintWriter(new File("/Users/abhishek.srivastava/Downloads/ml-1m/movies.json" ))
-    val x3 : String = movieList.mkString("[", ",", "]")
-    pw3.write(x3)
-    pw3.close()
+    val pw = new PrintWriter(new File("/Users/abhishek.srivastava/Downloads/ml-1m/firebase.json" ))
+    val moviesData : String = "\"movies\": { " + movieList.mkString(",") + "}"
+    val finalData = "{\"movieLens\":{" + usersData + ", " + moviesData + "}}"
+    pw.write(finalData)
+    pw.close
   }
 }
 
 class User(val id: Int, val gender: String, val age: Int, val occupation: String, val zipCode: String) {
   override def toString() : String = {
-    s"""{
-    |  "userid": "${id}",
-    |  "age": "${age}",
-    |  "occupation": "${occupation}",
-    |  "zipCode": "${zipCode}"
-    |}""".stripMargin
+    s"""
+       |"${id}" : {
+       |  "gender": "${gender}",
+       |  "age": "${age}",
+       |  "occupation": "${occupation}",
+       |  "zipCode": "${zipCode}"
+       |}""".stripMargin
   }
 }
 
@@ -119,13 +118,13 @@ object Rating {
 
 class Movie(val movieId: Int, val title: String, val year: Int, val genre: Array[String], val ratings: Array[Rating]) {
   override def toString() = {
-    s"""{
-       | "movieid": "${movieId}",
+    s"""
+       |"${movieId}": {
        | "title": "${title}",
        | "year": "${year}",
        | "genre": ${genre.map("\"" + _ + "\"").mkString("[", ",", "]")},
        | "ratings": ${ratings.mkString("[", ",", "]")}
-    }""".stripMargin
+       |}""".stripMargin
   }
 }
 
