@@ -28,25 +28,32 @@ object MovieLensDataPreperation {
       .toList
 
     // write to a json file as an array
-    val usersData  = "\"users\": {" + userList.mkString(",") + "}"
+    val usersData  = "\"users\": " + userList.mkString("{", ",", "}")
 
     // 2. read the ratings file
-    val ratingList : List[Rating] = Source
+    val ratingList : List[(Rating, Int)] = Source
       .fromFile("/Users/abhishek.srivastava/Downloads/ml-1m/ratings.dat")
       .getLines
       .map(line => Rating(line))
+      .zipWithIndex
       .toList
 
     // 2. read the movies file
     val movieList : List[Movie] = Source
       .fromFile("/Users/abhishek.srivastava/Downloads/ml-1m/movies.dat")
       .getLines
-      .map(line => Movie(line, ratingList))
+      .map(line => Movie(line))
       .toList
 
+    val genreList = movieList.flatMap(movie => movie.genre).map(movie => "\"" + movie + "\"").distinct
+    val yearList = movieList.map(movie => movie.year).distinct
+    val genreListStr = "\"genre\": " + genreList.mkString("[", ",", "]");
+    val yearListStr = "\"year\": " + yearList.mkString("[", ",", "]")
+    val ratingData = "\"ratings\": " + ratingList.map({case(r, i) => s""""$i": ${r.toString}"""}).mkString("{", ",", "}")
     val pw = new PrintWriter(new File("/Users/abhishek.srivastava/Downloads/ml-1m/firebase.json" ))
-    val moviesData : String = "\"movies\": { " + movieList.mkString(",") + "}"
-    val finalData = "{\"movieLens\":{" + usersData + ", " + moviesData + "}}"
+    val moviesData : String = "\"movies\": " + movieList.mkString("{", ",", "}")
+
+    val finalData = "{\"movieLens\":{" + usersData + ", " + moviesData + ", " + ratingData + ", " + genreListStr + ", " + yearListStr + "}}"
     pw.write(finalData)
     pw.close
   }
@@ -56,8 +63,9 @@ class User(val id: Int, val gender: String, val age: Int, val occupation: String
   override def toString() : String = {
     s"""
        |"${id}" : {
+       |  "userid": ${id},
        |  "gender": "${gender}",
-       |  "age": "${age}",
+       |  "age": ${age},
        |  "occupation": "${occupation}",
        |  "zipCode": "${zipCode}"
        |}""".stripMargin
@@ -100,9 +108,9 @@ object User {
 class Rating(val userId: Int, val movieId: Int, val rating: Int, val timeStamp : DateTime) {
   override def toString() = {
     s"""{
-       |  "userid" : "${userId}",
-       |  "movieid": "${movieId}",
-       |  "rating": "${rating}",
+       |  "userid" : ${userId},
+       |  "movieid": ${movieId},
+       |  "rating": ${rating},
        |  "timeStamp": "${timeStamp}"
        |}""".stripMargin
   }
@@ -116,25 +124,23 @@ object Rating {
   }
 }
 
-class Movie(val movieId: Int, val title: String, val year: Int, val genre: Array[String], val ratings: Array[Rating]) {
+class Movie(val movieId: Int, val title: String, val year: Int, val genre: Array[String]) {
   override def toString() = {
     s"""
        |"${movieId}": {
        | "title": "${title}",
-       | "year": "${year}",
-       | "genre": ${genre.map("\"" + _ + "\"").mkString("[", ",", "]")},
-       | "ratings": ${ratings.mkString("[", ",", "]")}
+       | "year": ${year},
+       | "genre": ${genre.map("\"" + _ + "\"").mkString("[", ",", "]")}
        |}""".stripMargin
   }
 }
 
 object Movie {
   val regex = "^(.+)\\s*\\((\\d+)\\)$".r
-  def apply(s: String, ratingList: List[Rating]) = {
+  def apply(s: String) = {
     val Array(id, titleStr, genreStr) = s.split("::")
     val regex(title, year) = titleStr
     val genreList = genreStr.split("\\|")
-    val ratings = ratingList.filter(r => r.movieId == id.toInt)
-    new Movie(id.toInt, title, year.toInt, genreList, ratings.toArray)
+    new Movie(id.toInt, title, year.toInt, genreList)
   }
 }
