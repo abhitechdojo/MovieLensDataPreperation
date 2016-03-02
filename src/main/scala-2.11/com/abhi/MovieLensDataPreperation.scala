@@ -47,7 +47,7 @@ object MovieLensDataPreperation {
       .map(line => Movie(line))
       .toList
 
-    //toFirebaseJson(inputPath, userList, ratingList, movieList)
+    toFirebaseJson(inputPath, userList, ratingList, movieList)
     storeInCassandra(userList, ratingList, movieList)
   }
 
@@ -91,8 +91,6 @@ object MovieLensDataPreperation {
     )
 
     val pw = new PrintWriter(new File(s"$inputPath/firebase.json" ))
-    //val moviesData : String = "\"movies\": " + movieList.mkString("{", ",", "}")
-
     val movieLensTmpl = (
       "movieLens" ->
         movieJsonTmpl ~
