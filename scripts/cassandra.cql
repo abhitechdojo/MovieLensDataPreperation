@@ -17,7 +17,7 @@ create table Movies (
   id int primary key,
   title text,
   year int,
-  genre list<text>
+  genre set<text>
 );
 
 create index on Movies(year);
@@ -36,12 +36,13 @@ create index on Users(age);
 create index on Users(occupation);
 create index on Users(zipCode);
 
-create table MovieRatings (
-  movieId int,
+create table Ratings (
   userId int,
+  movieId int,
   rating int,
   ratingTimestamp timestamp,
-  primary key ((movieId, userId), ratingTimestamp)
+  primary key ((userId, movieId), ratingTimestamp)
 );
 
-create index on MovieRatings(rating);
+create index on Ratings(rating);
+create index on Ratings(ratingTimestamp);

@@ -11,13 +11,14 @@ trait CassandraConnector extends SessionProvider {
 }
 
 object Connector {
-  val keyspace: KeySpace = new KeySpace("MovieLens")
+  val keyspace: KeySpace = new KeySpace("movielens")
 
   val cluster =
     Cluster.builder()
-      .addContactPoints("172.17.0.9")
+      .addContactPoint("192.168.99.100").withPort(9042)
       //.withCredentials(config.getString("cassandra.username"), config.getString("cassandra.password"))
       .build()
 
+  cluster.getConfiguration().getSocketOptions().setReadTimeoutMillis(100000);
   val session: Session = cluster.connect(keyspace.name)
 }

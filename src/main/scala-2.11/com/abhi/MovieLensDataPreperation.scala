@@ -1,21 +1,20 @@
 package com.abhi
 
+import java.nio.charset.CodingErrorAction
+
 import com.datastax.driver.core.Cluster
 import com.websudos.phantom.connectors.{ContactPoints}
 
 import scala.collection.immutable.HashMap
 import org.joda.time.{DateTimeZone, DateTime}
-import scala.io.Source
+import scala.io.{Codec, Source}
 import java.io.PrintWriter
 import java.io.File
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
-import scala.concurrent.Future
-import com.websudos.phantom.dsl._
 import com.websudos.phantom.connectors.{KeySpace, SessionProvider}
-import com.websudos.phantom.dsl.Session
 import com.abhi.entities._
-import com.abhi.connector._
+import com.abhi.models._
 
 /**
   * Created by abhishek.srivastava on 1/22/16.
@@ -23,6 +22,10 @@ import com.abhi.connector._
 object MovieLensDataPreperation {
 
   def main(args: Array[String]) : Unit = {
+
+    implicit val codec = Codec("UTF-8")
+    codec.onMalformedInput(CodingErrorAction.REPLACE)
+    codec.onUnmappableCharacter(CodingErrorAction.REPLACE)
 
     val inputPath = "/Users/abhishek.srivastava/Downloads/ml-1m"
 
@@ -44,13 +47,17 @@ object MovieLensDataPreperation {
       .map(line => Movie(line))
       .toList
 
-    toFirebaseJson(inputPath, userList, ratingList, movieList)
+    //toFirebaseJson(inputPath, userList, ratingList, movieList)
+    storeInCassandra(userList, ratingList, movieList)
+  }
+
+  def storeInCassandra(userList: List[User], ratingList: List[Rating], movieList: List[Movie]) = {
+    movieList.foreach(m => Movies.store(m))
+    userList.foreach(u => Users.store(u))
+    ratingList.foreach(r => Ratings.store(r))
   }
 
   def toFirebaseJson(inputPath: String, userList : List[User], ratingList : List[Rating], movieList : List[Movie]) = {
-    //implicit val codec = Codec("UTF-8")
-    //codec.onMalformedInput(CodingErrorAction.REPLACE)
-    //codec.onUnmappableCharacter(CodingErrorAction.REPLACE)
 
     val usersJsonTmpl = (
       "users" -> userList.map { u => (

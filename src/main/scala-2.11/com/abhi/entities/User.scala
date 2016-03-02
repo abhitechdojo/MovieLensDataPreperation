@@ -1,5 +1,7 @@
 package com.abhi.entities
 
+import scala.collection.immutable.HashMap
+
 /**
   * Created by abhishek.srivastava on 2/28/16.
   */

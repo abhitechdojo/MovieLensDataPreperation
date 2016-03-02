@@ -13,5 +13,5 @@ libraryDependencies ++= Seq(
   "org.json4s" %% "json4s-native" % json4sVersion,
   "org.json4s" %% "json4s-jackson" % json4sVersion
 )
-fork in run := true
-javaOptions in run += "-Xmx8G"
+//fork in run := true
+//javaOptions in run += "-Xmx8G"

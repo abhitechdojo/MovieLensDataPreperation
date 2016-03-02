@@ -1,38 +1,34 @@
-package com.abhi.model
+package com.abhi.models
 
 import com.abhi.connector.CassandraConnector
-import com.abhi.entities.Movie
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.dsl._
-
 import scala.concurrent.Future
+import com.abhi.entities.Movie
 
 class Movies extends CassandraTable[Movies, Movie] {
   object id extends IntColumn(this) with PartitionKey[Int]
   object title extends StringColumn(this) with Index[String]
   object year extends IntColumn(this) with Index[Int]
-  object genre extends Array[IntCol(this) with Index[String]
-  object zipCode extends StringColumn(this) with Index[String]
+  object genre extends SetColumn[Movies, Movie, String](this) with Index[Set[String]]
 
   def fromRow(row: Row) : Movie = {
     Movie(
       id(row),
-      gender(row),
-      age(row),
-      occupation(row),
-      zipCode(row)
+      title(row),
+      year(row),
+      genre(row)
     )
   }
 }
 
-object Users extends Users with CassandraConnector {
-  def store(user: Movie) : Future[ResultSet] = {
+object Movies extends Movies with CassandraConnector {
+  def store(movie: Movie) : Future[ResultSet] = {
     insert
-      .value(_.id, user.id)
-      .value(_.gender, user.gender)
-      .value(_.age, user.age)
-      .value(_.occupation, user.occupation)
-      .value(_.zipCode, user.zipCode)
+      .value(_.id, movie.movieId)
+      .value(_.title, movie.title)
+      .value(_.year, movie.year)
+      .value(_.genre, movie.genre)
       .consistencyLevel_=(ConsistencyLevel.ALL)
       .future()
   }

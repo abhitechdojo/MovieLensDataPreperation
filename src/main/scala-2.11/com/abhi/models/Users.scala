@@ -1,4 +1,4 @@
-package com.abhi.model
+package com.abhi.models
 
 import com.abhi.connector.CassandraConnector
 import com.abhi.entities.User
